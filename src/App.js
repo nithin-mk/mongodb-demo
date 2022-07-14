@@ -25,6 +25,7 @@ class App extends Component {
   constructor() {
     super();
     this.client = Stitch.initializeDefaultAppClient('myshop-zrxkg');
+    this.client.callFunction('Greet', ['Max']);
   }
 
   logoutHandler = () => {
