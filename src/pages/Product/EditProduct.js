@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 import axios from 'axios';
+import { Stitch, RemoteMongoClient } from 'mongodb-stitch-browser-sdk';
+import BSON from 'bson';
 
 import './EditProduct.css';
 import Input from '../../components/Input/Input';
@@ -51,7 +53,7 @@ class ProductEditPage extends Component {
     this.setState({ isLoading: true });
     const productData = {
       name: this.state.title,
-      price: parseFloat(this.state.price),
+      price: BSON.Decimal128.fromString(this.state.price.toString()),
       image: this.state.imageUrl,
       description: this.state.description
     };
@@ -62,10 +64,18 @@ class ProductEditPage extends Component {
         productData
       );
     } else {
-      request = axios.post('http://localhost:3100/products', productData);
+      const mongodb = Stitch.defaultAppClient.getServiceClient(
+        RemoteMongoClient.factory,
+        'mongodb-atlas'
+      );
+      request = mongodb
+        .db('shop')
+        .collection('products')
+        .insertOne(productData);
     }
     request
       .then(result => {
+        console.log(result);
         this.setState({ isLoading: false });
         this.props.history.replace('/products');
       })
