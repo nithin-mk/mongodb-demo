@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
-import axios from 'axios';
+import { Stitch, RemoteMongoClient } from 'mongodb-stitch-browser-sdk';
+import BSON from 'bson';
 
 import Products from '../../components/Products/Products';
 
@@ -10,8 +11,14 @@ class ProductsPage extends Component {
   }
 
   productDeleteHandler = productId => {
-    axios
-      .delete('http://localhost:3100/products/' + productId)
+    const mongodb = Stitch.defaultAppClient.getServiceClient(
+      RemoteMongoClient.factory,
+      'mongodb-atlas'
+    );
+    mongodb
+      .db('shop')
+      .collection('products')
+      .deleteOne({ _id: new BSON.ObjectId(productId) })
       .then(result => {
         console.log(result);
         this.fetchData();
@@ -25,14 +32,29 @@ class ProductsPage extends Component {
   };
 
   fetchData = () => {
-    axios
-      .get('http://localhost:3100/products')
-      .then(productsResponse => {
-        this.setState({ isLoading: false, products: productsResponse.data });
+    const mongodb = Stitch.defaultAppClient.getServiceClient(
+      RemoteMongoClient.factory,
+      'mongodb-atlas'
+    );
+    mongodb
+      .db('shop')
+      .collection('products')
+      .find()
+      .asArray()
+      .then(products => {
+        const transformedProducts = products.map(product => {
+          product._id = product._id.toString();
+          product.price = product.price.toString();
+          return product;
+        });
+        console.log(products);
+        this.setState({ isLoading: false, products: products });
       })
       .catch(err => {
-        this.setState({ isLoading: false, products: [] });
-        this.props.onError('Loading products failed. Please try again later');
+        this.setState({ isLoading: false });
+        this.props.onError(
+          'Fetching the products failed. Please try again later'
+        );
         console.log(err);
       });
   };
