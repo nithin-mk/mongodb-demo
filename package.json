@@ -22,5 +22,9 @@
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
     "start:server": "node ./backend/app.js"
+  },
+  "engines": {
+    "npm": ">=6.0.0 <7.0.0",
+    "node": ">=14.0.0 <15.0.0"
   }
 }
